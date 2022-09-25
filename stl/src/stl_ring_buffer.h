@@ -9,6 +9,10 @@
 #define _STL_RING_BUFFER_H
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 #include <stdatomic.h>
 /**
  * @brief  define stl_ring_buffer struct
@@ -32,7 +36,7 @@ typedef struct
  * @param is_expand 
  * @return stl_ring_buffer* 
  */
-stl_ring_buffer *stl_ring_buffer_alloc(size_t capacity,uint32_t d_size, bool is_expand);
+stl_ring_buffer *stl_ring_buffer_alloc(size_t capacity, size_t d_size, bool is_expand);
 /**
  * @brief  init stl_ring_buffer 
  * 
@@ -42,7 +46,7 @@ stl_ring_buffer *stl_ring_buffer_alloc(size_t capacity,uint32_t d_size, bool is_
  * @param is_expand 
  * @return int 
  */
-int stl_ring_buffer_init(stl_ring_buffer *rb, size_t capacity,uint32_t d_size,bool is_expand);
+int stl_ring_buffer_init(stl_ring_buffer *rb, size_t capacity, size_t d_size,bool is_expand);
 /**
  * @brief write data to stl_ring_buffer
  * 
@@ -80,10 +84,11 @@ void stl_ring_buffer_deinit(stl_ring_buffer *rb);
  */
 inline bool stl_ring_buffer_is_empty(stl_ring_buffer *rb)
 {
-  if(rb && rb->head ==rb->tail && rb->head == 0) {
-    return false;
+  assert(rb != NULL);
+  if(rb->head ==rb->tail) {
+    return true;
   }
-  return true;
+  return false;
 }
 /**
  * @brief check stl_ring_buffer is full
@@ -94,7 +99,7 @@ inline bool stl_ring_buffer_is_empty(stl_ring_buffer *rb)
  */
 inline bool stl_ring_buffer_is_full(stl_ring_buffer *rb)
 {
-  if(rb && rb->tail >= rb->capacity) {
+  if(rb && (rb->tail + rb->d_size) % (rb->capacity * rb->d_size) != rb->head) {
     return false;
   }
   return true;
