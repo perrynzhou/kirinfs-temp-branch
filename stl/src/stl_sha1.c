@@ -7,9 +7,9 @@
 
 #include <stdio.h>
 #include "stl_sha1.h"
+#define memzero(buf, n) (void)memset(buf, 0, n)
 static const unsigned char *stl_sha1_body(stl_sha1 *ctx, const unsigned char *data,
                                           size_t size);
-
 int stl_sha1_init(stl_sha1 *ctx)
 {
   if (ctx)
@@ -37,6 +37,7 @@ stl_sha1 *stl_sha1_alloc()
   return sa1;
 }
 
+
 void stl_sha1_update(stl_sha1 *ctx, const void *data, size_t size)
 {
   size_t used, free;
@@ -50,11 +51,13 @@ void stl_sha1_update(stl_sha1 *ctx, const void *data, size_t size)
 
     if (size < free)
     {
-      ngx_memcpy(&ctx->buffer[used], data, size);
+      //ngx_memcpy(&ctx->buffer[used], data, size);
+      memcpy(&ctx->buffer[used], data, size);
       return;
     }
 
-    ngx_memcpy(&ctx->buffer[used], data, free);
+    //ngx_memcpy(&ctx->buffer[used], data, free);
+    memcpy(&ctx->buffer[used], data, free);
     data = (unsigned char *)data + free;
     size -= free;
     (void)stl_sha1_body(ctx, ctx->buffer, 64);
@@ -66,8 +69,10 @@ void stl_sha1_update(stl_sha1 *ctx, const void *data, size_t size)
     size &= 0x3f;
   }
 
-  ngx_memcpy(ctx->buffer, data, size);
+  //ngx_memcpy(ctx->buffer, data, size);
+  memcpy(ctx->buffer, data, size);
 }
+
 
 void stl_sha1_final(unsigned char result[20], stl_sha1 *ctx)
 {
@@ -81,13 +86,15 @@ void stl_sha1_final(unsigned char result[20], stl_sha1 *ctx)
 
   if (free < 8)
   {
-    ngx_memzero(&ctx->buffer[used], free);
+    //ngx_memzero(&ctx->buffer[used], free);
+    memzero(&ctx->buffer[used], free);
     (void)stl_sha1_body(ctx, ctx->buffer, 64);
     used = 0;
     free = 64;
   }
 
-  ngx_memzero(&ctx->buffer[used], free - 8);
+  //ngx_memzero(&ctx->buffer[used], free - 8);
+  memzero(&ctx->buffer[used], free - 8);
 
   ctx->bytes <<= 3;
   ctx->buffer[56] = (unsigned char)(ctx->bytes >> 56);
@@ -122,7 +129,8 @@ void stl_sha1_final(unsigned char result[20], stl_sha1 *ctx)
   result[18] = (unsigned char)(ctx->e >> 8);
   result[19] = (unsigned char)ctx->e;
 
-  ngx_memzero(ctx, sizeof(*ctx));
+  //ngx_memzero(ctx, sizeof(*ctx));
+  memzero(ctx, sizeof(*ctx));
 }
 
 /*
