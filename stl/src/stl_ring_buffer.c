@@ -10,19 +10,20 @@
 #include "stl_ring_buffer.h"
 #define STL_DEFAULT_RING_BUF_CAPACITY (64)
 
-stl_ring_buffer *stl_ring_buffer_alloc(size_t capacity, uint32_t d_size, bool is_expand)
+stl_ring_buffer *stl_ring_buffer_alloc(size_t capacity, size_t d_size, bool is_expand)
 {
   stl_ring_buffer *rb = calloc(1, sizeof(stl_ring_buffer));
   assert(rb != NULL);
   stl_ring_buffer_init(rb, capacity, d_size, is_expand);
   return rb;
 }
-int stl_ring_buffer_init(stl_ring_buffer *rb, size_t capacity, uint32_t d_size, bool is_expand)
+int stl_ring_buffer_init(stl_ring_buffer *rb, size_t capacity, size_t d_size, bool is_expand)
 {
   if (rb)
   {
     rb->capacity = (capacity < STL_DEFAULT_RING_BUF_CAPACITY) ? STL_DEFAULT_RING_BUF_CAPACITY : capacity;
     rb->capacity = capacity;
+    rb->d_size = d_size;
     rb->buf_ptr = calloc(capacity, sizeof(char) * d_size);
     assert(rb->buf_ptr != NULL);
     rb->head = rb->tail = 0;
@@ -33,11 +34,10 @@ int stl_ring_buffer_init(stl_ring_buffer *rb, size_t capacity, uint32_t d_size, 
 
 int stl_ring_buffer_queue(stl_ring_buffer *rb, void *data)
 {
-  if (rb != NULL && data != NULL)
+  if (rb != NULL && data != NULL && !stl_ring_buffer_is_full(rb))
   {
-
-    atomic_fetch_add(&rb->tail, rb->d_size);
     memcpy(rb->buf_ptr + rb->tail, data, rb->d_size);
+    atomic_store(&rb->tail, (rb->tail + rb->d_size) % (rb->capacity * rb->d_size));
     return 0;
   }
   return -1;
@@ -45,10 +45,10 @@ int stl_ring_buffer_queue(stl_ring_buffer *rb, void *data)
 void *stl_ring_buffer_dequeue(stl_ring_buffer *rb)
 {
   void *ptr = NULL;
-  if (rb)
+  if (rb && !stl_ring_buffer_is_empty(rb))
   {
-    ptr = rb->buf_ptr[rb->head];
-    atomic_fetch_add(&rb->head, rb->d_size);
+    ptr = &rb->buf_ptr[rb->head];
+    atomic_store(&rb->head, (rb->head + rb->d_size) % (rb->capacity * rb->d_size));
   }
   return ptr;
 }
