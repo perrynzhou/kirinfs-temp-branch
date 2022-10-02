@@ -22,26 +22,41 @@
 static int stl_socket_set_blocking(int fd, int non_block);
 int stl_socket_create_tcp(const char *host, const char *port, int flags)
 {
-   struct sockaddr_in addr;
+  struct sockaddr_in addr;
 
-    int sfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  int sfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    /* retrieve the port number for listening */
+  /* retrieve the port number for listening */
 
-    /* setup the address structure */
-    /* use INADDR_ANY to bind to all local addresses  */
-    bzero(&addr, sizeof(addr)); 
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr.sin_port = htons(atoi(port));
+  /* setup the address structure */
+  /* use INADDR_ANY to bind to all local addresses  */
+  bzero(&addr, sizeof(addr));
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  addr.sin_port = htons(atoi(port));
 
+  bind(sfd, (struct sockaddr *)&addr, sizeof(addr));
+  listen(sfd, 50000);
+  return sfd;
+}
 
-    bind(sfd,(struct sockaddr *)&addr,sizeof(addr));
-    listen(sfd, 50000);
+int stl_socket_init_client(const char *host, const char *port)
+{
+  int sock = -1;
+  if (host && port)
+  {
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in serv_addr;
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
 
-     return sfd;
+    serv_addr.sin_addr.s_addr = inet_addr(host);
 
+    serv_addr.sin_port = htons(atoi(port));
 
+    connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+  }
+  return sock;
 }
 
 int stl_socket_create_domain(const char *socket_path)
@@ -155,20 +170,21 @@ int stl_socket_recv(int fd, char *buf, size_t *len)
 int stl_socket_nonblocking(int fd)
 {
 
-      int flags, result;
-    flags = fcntl(fd, F_GETFL, 0);
-    if (flags == -1) {
-        perror("fcntl");
-        return -1;
-    }
-    result = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-    if (result == -1) {
-        perror("fcntl");
-        return -1;
-    }
-    return 0;
+  int flags, result;
+  flags = fcntl(fd, F_GETFL, 0);
+  if (flags == -1)
+  {
+    perror("fcntl");
+    return -1;
+  }
+  result = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+  if (result == -1)
+  {
+    perror("fcntl");
+    return -1;
+  }
+  return 0;
   // return stl_socket_set_blocking(fd, 1);
-   
 }
 
 int stl_socket_blocking(int fd)
@@ -183,18 +199,16 @@ int main()
 {
   int sfd = stl_socket_create_tcp("127.0.0.1", "9090", 1);
   fprintf(stdout, "sfd=%d\n", sfd);
-      int sock;
-    struct sockaddr addr;
-    socklen_t addrlen = sizeof(addr);
+  int sock;
+  struct sockaddr addr;
+  socklen_t addrlen = sizeof(addr);
 
-  
-     
-  while(1) {
+  while (1)
+  {
     if ((sock = accept(sfd, (struct sockaddr *)&addr, &addrlen)) != -1)
     {
-        fprintf(stdout,"sfd=%d,cfd=%d\n",sfd,sock);
+      fprintf(stdout, "sfd=%d,cfd=%d\n", sfd, sock);
     }
   }
- 
 }
 #endif
