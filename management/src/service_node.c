@@ -80,6 +80,7 @@ int service_node_keep_alive(service_node *node, void (*ctx_func_cb)(void *ctx))
       }
       // send message to client
       write(node->fd,SERVICE_NODE_HANDSHARK_KEY,sizeof(char));
+      //recv message from server
       read(node->fd,&c,sizeof(char));
      
     }
