@@ -7,7 +7,7 @@
 
 #include "service_node.h"
 #include "stl_socket.h"
-
+#include "mgmt_cmd.h"
 #include <stdio.h>
 #include <time.h>
 #include <sys/time.h>
@@ -17,34 +17,53 @@
 #define SERVICE_NODE_HANDSHARK_KEY 's'
 #define SERVICE_NODE_PING_FAIL_CNT 3
 
-int service_node_init(service_node *sn, stl_string *host, int port)
+int service_node_init(service_node *sn,stl_string *host,int port,int node_type)
 {
 
   if (sn && host)
   {
-    stl_string_init(&sn->addr, stl_string_data(host));
+    sn->node_addr=stl_string_alloc(stl_string_data(host));
     sn->port = port;
     sn->fd = stl_socket_init_client(stl_string_data(host), port);
     if (sn->fd < 0)
     {
       goto init_err;
     }
+    switch(node_type)
+    {
+      case MGMT_META_NODE:
+        sn->node_type_key = stl_string_alloc("meta");
+        sn->node_type_val =MGMT_META_NODE;
+      break;
+      case MGMT_DATA_NODE:
+        sn->node_type_key = stl_string_alloc("data");
+        sn->node_type_val =MGMT_DATA_NODE;
+      break;
+      default:
+      break;
+    }
+  
   }
   return 0;
 
 init_err:
-  str_string_deinit(&sn->addr);
+  str_string_destroy(sn->node_addr);
   return -1;
 }
 void service_node_deinit(service_node *sn)
 {
+  if(sn)
+  {
+     str_string_destroy(sn->node_addr);
+      str_string_destroy(sn->node_type_key);
+  }
 }
-service_node *service_node_create(stl_string *host, int port)
+service_node *service_node_alloc(stl_string *host, int port,int node_type)
 {
   service_node *sn = (service_node *)alloc(1, sizeof(service_node));
   assert(sn != NULL);
 
-  if (service_node_init(sn, host, port) != 0)
+  if (service_node_init(sn, host, port,node_type) != 0)
   {
     free(sn);
     sn = NULL;

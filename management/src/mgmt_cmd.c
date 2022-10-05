@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include "mgmt_cmd.h"
-mgmt_request *mgmt_request_alloc(char *service_addr, mgmt_cmd_type type)
+mgmt_request *mgmt_request_alloc(char *service_addr, mgmt_node_type  node_type,mgmt_cmd_type cmd_type)
 {
  
   mgmt_request *request = NULL;
@@ -17,7 +17,8 @@ mgmt_request *mgmt_request_alloc(char *service_addr, mgmt_cmd_type type)
     request = (mgmt_request *)calloc(1,sizeof(mgmt_request)+len);
     strncpy((char *)&request->service_node_addr,service_addr,len);
     request->len = len;
-    request->type = type;
+    request->cmd_type = cmd_type;
+    request->node_type = node_type;
   }
   return request;
 }

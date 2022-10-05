@@ -13,20 +13,7 @@
 #include "../../module/stl/src/stl_mutex.h"
 #include "../../module/stl/src/stl_epoll.h"
 #include <jansson.h>
-typedef enum
-{
-   SERVICE_MGS_TYPE = 0,
-   SERVICE_OSS_TYPE,
-   SERVICE_MDS_TYPE
-} connection_type;
 
-typedef struct
-{
-   // service type
-   connection_type type;
-   stl_string addr;
-   bool runing_status;
-} service_connection_info;
 typedef struct
 {
    // data storage for msg
@@ -53,8 +40,8 @@ typedef struct
 } mgmt_service;
 
 mgmt_service *mgmt_service_alloc(int port,stl_string *fsname, stl_string *dir);
-int mgmt_service_join_node(mgmt_service *service,service_connection_info *conn_info);
-int mgmt_service_expel_node(mgmt_service *service,service_connection_info *conn_info);
+int mgmt_service_join_node(mgmt_service *service,service_node *node_info);
+int mgmt_service_expel_node(mgmt_service *service,service_node *node_info);
 int mgmt_service_start(mgmt_service *service);
 void mgmt_service_destroy(mgmt_service *service);
 #endif

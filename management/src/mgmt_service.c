@@ -19,7 +19,7 @@ int mgmt_handle_io(void *ctx, int fd)
   int ret = -1;
   char dbuf[4096] = {'\0'};
   ssize_t rn = -1;
-  stl_string **conn_info_ptr = NULL;
+  stl_string **node_info_ptr = NULL;
   size_t cnt = 0;
   do
   {
@@ -29,26 +29,26 @@ int mgmt_handle_io(void *ctx, int fd)
   {
 
     size_t mgmt_request_head_len = ((mgmt_request *)&dbuf)->len;
-    mgmt_cmd_type type = ((mgmt_request *)&dbuf)->type;
+    mgmt_cmd_type cmd_type = ((mgmt_request *)&dbuf)->cmd_type;
+    mgmt_node_type node_type =  ((mgmt_request *)&dbuf)->node_type;
     char *service_node_addr = ((mgmt_request *)&dbuf)->service_node_addr;
     stl_string *node_addr = stl_string_alloc(service_node_addr);
     mgmt_service *service = (mgmt_service *)ctx;
 
-    stl_string_split(node_addr, ":", &conn_info_ptr, &cnt);
-    int node_port = atoi(stl_string_data(conn_info_ptr[1]));
-    service_connection_info sci;
-    ret = service_node_init(&sci, conn_info_ptr[0], node_port);
+    stl_string_split(node_addr, ":", &node_info_ptr, &cnt);
+    int node_port = atoi(stl_string_data(node_info_ptr[1]));
+    service_node sci;
+    ret = service_node_init(&sci, node_info_ptr[0], node_port,node_type);
     if (ret < 0)
     {
-      switch (type)
+      switch (cmd_type)
       {
       case MGMT_DEL_NODE_CMD:
         ret = mgmt_service_join_node(service, &sci);
-
+         
         break;
       case MGMT_ADD_NODE_CMD:
         ret = mgmt_service_expel_node(service, &sci);
-
         break;
       default:
         break;
@@ -61,13 +61,13 @@ int mgmt_handle_io(void *ctx, int fd)
   {
     for (size_t i = 0; i < cnt; i++)
     {
-      stl_string_destroy(conn_info_ptr[i]);
+      stl_string_destroy(node_info_ptr[i]);
     }
   }
-  if (conn_info_ptr)
+  if (node_info_ptr)
   {
-    free(conn_info_ptr);
-    conn_info_ptr = NULL;
+    free(node_info_ptr);
+    node_info_ptr = NULL;
   }
   return ret;
 }
@@ -101,13 +101,13 @@ mgmt_service *mgmt_service_alloc(int port, stl_string *fsname, stl_string *dir)
 out:
   return mgmt;
 }
-int mgmt_service_join_node(mgmt_service *service, service_connection_info *conn_info)
+int mgmt_service_join_node(mgmt_service *service, service_node *node_info)
 {
   int ret = -1;
   stl_string **data = NULL;
-  if (service && conn_info)
+  if (service && node_info)
   {
-    char *info_str = stl_string_data(&conn_info->addr);
+    char *info_str = stl_string_data(&node_info->node_addr);
     stl_dict_item key = {
         .data.str = info_str,
         .data_type = DICT_ITEM_TYPE_STR,
@@ -117,11 +117,12 @@ int mgmt_service_join_node(mgmt_service *service, service_connection_info *conn_
     {
 
       size_t cnt = 0;
-      stl_string_split(&conn_info->addr, ":", &data, &cnt);
+      stl_string_split(&node_info->node_addr, ":", &data, &cnt);
       if (cnt == 2)
       {
-
-        service_node *node = service_node_create(data[0], atoi(stl_string_data(data[1])));
+        
+        
+        service_node *node = service_node_create(node_info->node_addr,node_info->port,node_info->node_type_val);
         assert(node != NULL);
         stl_dict_item value = {
             .data.ptr = node,
@@ -143,15 +144,15 @@ out:
   }
   return ret;
 }
-int mgmt_service_expel_node(mgmt_service *service, service_connection_info *conn_info)
+int mgmt_service_expel_node(mgmt_service *service, service_node *node_info)
 {
   int ret = -1;
-  if (service && conn_info)
+  if (service && node_info)
   {
     stl_dict_item key = {
-        .data.str = stl_string_data(&conn_info->addr),
+        .data.str = stl_string_data(&node_info->node_addr),
         .data_type = DICT_ITEM_TYPE_STR,
-        .len = strlen(stl_string_data(&conn_info->addr)),
+        .len = strlen(stl_string_data(&node_info->node_addr)),
     };
     void *ptr = NULL;
     if ((ptr = stl_dict_lookup(service->service_info, &key)))
