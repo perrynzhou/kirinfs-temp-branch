@@ -21,6 +21,4 @@ typedef struct  {
 
 mgmt_request *mgmt_request_alloc(char *service_addr,mgmt_cmd_type type);
 void mgmt_request_destroy(mgmt_request *req);
-
-
 #endif
