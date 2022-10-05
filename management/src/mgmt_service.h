@@ -40,7 +40,7 @@ typedef struct
    // storage json for service_addr_info 
    json_t *service_topo;
    // keep alive for detach mds/oss 
-   stl_thread *detach_works;
+   stl_thread **detach_works;
    size_t num_detach_works;
    // request handle for each diff service
    stl_thread *service_works;

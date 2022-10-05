@@ -78,7 +78,9 @@ static stl_dict_item_pair *stl_dict_item_pair_alloc(stl_dict_item *key, stl_dict
   {
     pair = calloc(1, sizeof(stl_dict_item_pair));
     if (key->data_type != DICT_ITEM_TYPE_STR || key->data_type != DICT_ITEM_TYPE_PTR)
-      memcpy(&pair->key, key, key->len);
+    {
+       memcpy(&pair->key, key, key->len);
+    }
     memcpy(&pair->value, value, value->len);
     stl_dict_item_ptr_alloc(&pair->key, key);
     stl_dict_item_ptr_alloc(&pair->value, value);

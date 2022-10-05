@@ -10,31 +10,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-void print_usage()
+#include "mgmt_service.h"
+#include "../../module/stl/src/stl_socket.h"
+#include "../../module/stl/src/stl_string.h"
+void mgmt_usage()
 {
-  printf("Usage: mgmt  -p {port}\n");
+  printf("Usage: mgmt -s {mgmt_addr} -f {fsname}\n");
+  printf("       mgmt -p 4567  -d /data  -f bigfs\n");
 }
 
 int main(int argc, char *argv[])
 {
+  char *mgmt_run_port = NULL;
+  char *fsname_temp = NULL;
+  char *mgmt_data_temp = NULL;
   int option = 0;
-  int port = -1;
-  while ((option = getopt(argc, argv, "p:")) != -1)
+  while ((option = getopt(argc, argv, "p:f:d:")) != -1)
   {
     switch (option)
     {
     case 'p':
-      port = atoi(optarg);
+      mgmt_run_port = atoi(optarg);
+      break;
+    case 'f':
+      fsname_temp = strdup(optarg);
+      break;
+    case 'd':
+      mgmt_data_temp = strdup(optarg);
       break;
     default:
       break;
     }
   }
-  if (port == -1)
+  // mgmt_service *mgmt_service_alloc(int port, stl_string *fsname, stl_string *dir)
+
+  if (mgmt_run_port == NULL || fsname_temp == NULL || mgmt_data_temp == NULL)
   {
-    print_usage();
+    mgmt_usage();
     exit(EXIT_FAILURE);
   }
+  stl_string **ptr = NULL;
+  size_t cnt = 0;
+  stl_string *fsname = stl_string_alloc(fsname_temp);
+  stl_string *mgmt_data = stl_string_alloc(mgmt_data_temp);
+  if (cnt <= 0)
+  {
+    stl_string_destroy(fsname);
+    stl_string_destroy(mgmt_data);
+    return -1;
+  }
+  int port = atoi(mgmt_run_port);
 
+  mgmt_service *service = mgmt_service_alloc(port, fsname, mgmt_data);
+  if (service)
+  {
+    mgmt_service_start(service);
+  }
   return 0;
 }

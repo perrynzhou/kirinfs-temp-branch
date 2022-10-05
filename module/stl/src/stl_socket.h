@@ -11,6 +11,8 @@
 #define STL_SOCKET_CONNECT_NONBLOCK 1
 #define STL_SOCKET_CONNECT_BLOCK 0
 int stl_socket_create_tcp(const char *host, const char *port,int flags);
+
+int stl_socket_init_client(const char *host, const char *port);
 int stl_socket_create_domain(const char *socket_path);
 // int send_all(int sfd, char *buf, int *len)
 int stl_socket_send(int fd, char *buf, size_t *len);
