@@ -14,13 +14,15 @@
 #include <assert.h>
 
 #define STL_STRING_TEMP_BUFFER_SIZE (2048)
-#define STL_STRING_SPLIT_CNT (2048)
-void   stl_string_reset(stl_string *c)
+#define STL_STRING_SPLIT_CNT (256)
+void stl_string_reset(stl_string *c)
 {
-  if(c) {
-    if(c->len>=STL_STRING_INLINE_LEN) {
-        free(c->data.ptr);
-        c->data.ptr = NULL;
+  if (c)
+  {
+    if (c->len >= STL_STRING_INLINE_LEN)
+    {
+      free(c->data.ptr);
+      c->data.ptr = NULL;
     }
     c->len = 0;
   }
@@ -41,57 +43,83 @@ char *stl_string_data(stl_string *c)
   }
   return NULL;
 }
-int stl_string_split(stl_string *src, const char *delim, stl_string **c_ptr, size_t *cnt)
+int stl_string_split(stl_string *src, const char *delim, stl_string ***c_ptr, size_t *cnt)
 {
   int ret = -1;
   if (src && delim && c_ptr && cnt)
   {
-    char *data = stl_string_data(src);
-    size_t delim_len = strlen(delim);
+    char *string = stl_string_data(src);
+    char *found = NULL;
+    stl_string **tmp = (stl_string **)calloc(STL_STRING_SPLIT_CNT, sizeof(stl_string *));
+    size_t i = 0;
+    while ((found = strsep(&string, delim)) != NULL)
+    {
+      tmp[i++] = stl_string_alloc(found);
+    }
+    if (i > 0)
+    {
+      *cnt = i;
 
+      for (size_t j = 0; j < i; j++)
+      {
+        **c_ptr = tmp[j];
+      }
+    }
+
+    if (tmp)
+    {
+      free(tmp);
+      tmp = NULL;
+    }
   }
   return ret;
 }
 int stl_string_replace(stl_string *src, const char *old_data, const char *new_data)
 {
   int ret = -1;
-  if(src && old_data && new_data)
+  if (src && old_data && new_data)
   {
-    
+
     size_t len = stl_string_len(src);
-    size_t i=0;
+    size_t i = 0;
     size_t old_len = strlen(old_data);
     size_t new_len = strlen(new_data);
-    if(len< old_len) {
+    if (len < old_len)
+    {
       return ret;
     }
     char *data = stl_string_data(src);
     bool done = false;
-    for(;i<len;i++) {
-        if(data[i]==old_data[0] && strncmp((char *)&data[i],old_data,old_len)==0)
+    for (; i < len; i++)
+    {
+      if (data[i] == old_data[0] && strncmp((char *)&data[i], old_data, old_len) == 0)
+      {
+        done = true;
+        break;
+      }
+    }
+    if (done)
+    {
+      size_t target_len = i + new_len;
+      if (target_len < STL_STRING_INLINE_LEN)
+      {
+        if (len >= STL_STRING_INLINE_LEN)
         {
-          done = true;
-          break;
+          free(src->data.ptr);
+          src->data.ptr = NULL;
         }
+        strncpy(data + i, new_data, new_len);
+        src->data.in_data[target_len] = '\0';
+      }
+      else
+      {
+        char *ptr = realloc(src->data.ptr, target_len + 1);
+        src->data.ptr = ptr;
+        strncpy(data + i, new_data, new_len);
+        src->data.ptr[target_len] = '\0';
+      }
+      ret = 0;
     }
-    if(done) {
-       size_t target_len = i + new_len;
-       if(target_len <STL_STRING_INLINE_LEN) {
-           if(len>=STL_STRING_INLINE_LEN) {
-             free(src->data.ptr);
-             src->data.ptr = NULL;
-           }
-          strncpy(data+i,new_data,new_len);
-          src->data.in_data[target_len] ='\0';
-       }else {
-          char *ptr = realloc(src->data.ptr,target_len+1);
-          src->data.ptr = ptr;
-          strncpy(data+i,new_data,new_len);
-           src->data.ptr[target_len] ='\0';
-       }
-       ret = 0;
-    }
-
   }
   return ret;
   // todo
@@ -100,7 +128,7 @@ void stl_string_trim(stl_string *src)
 {
   if (src)
   {
-    
+
     size_t len = stl_string_len(src);
     char *data = stl_string_data(src);
     int i = 0, j = 0;
@@ -109,21 +137,22 @@ void stl_string_trim(stl_string *src)
       if (data[i] != ' ')
       {
         data[j++] = data[i];
-        fprintf(stdout,"data[%d]=%c\n",j,data[j-1]);
+        fprintf(stdout, "data[%d]=%c\n", j, data[j - 1]);
       }
     }
 
-      if (j > 0)
+    if (j > 0)
+    {
+      if (j < STL_STRING_INLINE_LEN)
       {
-        if(j<STL_STRING_INLINE_LEN) {
-          char *ptr = data;
-          src->data.ptr = NULL;
-          memmove(&src->data.in_data,ptr,j);
-          src->data.in_data[j] ='\0';
-          free(ptr);
-        }
-        src->len = j;
+        char *ptr = data;
+        src->data.ptr = NULL;
+        memmove(&src->data.in_data, ptr, j);
+        src->data.in_data[j] = '\0';
+        free(ptr);
       }
+      src->len = j;
+    }
   }
 }
 int stl_string_dup(stl_string *src, stl_string *dst)

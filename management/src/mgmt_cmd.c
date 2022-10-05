@@ -7,19 +7,16 @@
 
 #include <stdio.h>
 #include "mgmt_cmd.h"
-
-
-
 mgmt_request *mgmt_request_alloc(char *service_addr, mgmt_cmd_type type)
 {
  
   mgmt_request *request = NULL;
   if (service_addr)
   {
-    size_t len = strlen(service_addr)+1;
+    size_t len = strlen(service_addr);
     request = (mgmt_request *)calloc(1,sizeof(mgmt_request)+len);
-    strncpy((char *)&request->service_node_addr,service_addr,len-1);
-    request->len = len -1;
+    strncpy((char *)&request->service_node_addr,service_addr,len);
+    request->len = len;
     request->type = type;
   }
   return request;

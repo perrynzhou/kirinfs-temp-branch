@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         stl_string *mgmt_addr_tmp = stl_string_alloc(mgmt_addr);
         stl_string **ptr = NULL;
         size_t cnt = 0;
-        int ret = stl_string_split(mgmt_addr_tmp, ":", ptr, &cnt);
+        int ret = stl_string_split(mgmt_addr_tmp, ":", &ptr, &cnt);
         if (!ret)
         {
             char *host = stl_string_data(ptr[0]);
@@ -94,6 +94,10 @@ int main(int argc, char *argv[])
         for(size_t i=0;i<cnt;i++)
         {
              stl_string_destroy(ptr[i]);
+        }
+        if(ptr !=NULL)
+        {
+            free(ptr);
         }
         if(mgmt_addr_tmp)
         {

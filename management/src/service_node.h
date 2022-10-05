@@ -17,7 +17,10 @@ typedef struct  {
   void *ctx;
 }service_node;
 
+
+int service_node_init(service_node *sn,stl_string *host,int port);
 service_node *service_node_create(stl_string *host,int port);
 int service_node_keep_alive(service_node *node,void (*ctx_func_cb)(void *ctx));
 void service_node_destroy(service_node *node);
+void service_node_deinit(service_node *sn);
 #endif

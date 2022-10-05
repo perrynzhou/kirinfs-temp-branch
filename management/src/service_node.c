@@ -14,30 +14,42 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <pthread.h>
-#define SERVICE_NODE_HANDSHARK_KEY  's'
-#define SERVICE_NODE_PING_FAIL_CNT  3
-service_node *service_node_create(stl_string *host, int port)
+#define SERVICE_NODE_HANDSHARK_KEY 's'
+#define SERVICE_NODE_PING_FAIL_CNT 3
+
+int service_node_init(service_node *sn, stl_string *host, int port)
 {
-  service_node *n = NULL;
-  if (host && port > 4000)
+
+  if (sn && host)
   {
-    n = (service_node *)alloc(1, sizeof(service_node));
-    assert(n != NULL);
-    stl_string_init(&n->addr, stl_string_data(host));
-    n->port = port;
-    n->fd = stl_socket_init_client(stl_string_data(host), port);
-    if (n->fd < 0)
+    stl_string_init(&sn->addr, stl_string_data(host));
+    sn->port = port;
+    sn->fd = stl_socket_init_client(stl_string_data(host), port);
+    if (sn->fd < 0)
     {
       goto init_err;
     }
   }
-  return n;
-init_err:
+  return 0;
 
-  str_string_deinit(&n->addr);
-  free(n);
-  n = NULL;
-  return n;
+init_err:
+  str_string_deinit(&sn->addr);
+  return -1;
+}
+void service_node_deinit(service_node *sn)
+{
+}
+service_node *service_node_create(stl_string *host, int port)
+{
+  service_node *sn = (service_node *)alloc(1, sizeof(service_node));
+  assert(sn != NULL);
+
+  if (service_node_init(sn, host, port) != 0)
+  {
+    free(sn);
+    sn = NULL;
+  }
+  return sn;
 }
 
 static long long tm_to_ns(struct timespec tm)
@@ -56,7 +68,6 @@ static struct timespec ns_to_tm(long long ns)
 int service_node_keep_alive(service_node *node, void (*ctx_func_cb)(void *ctx))
 {
 
-
   size_t fail_cnt = 0;
   struct timespec start_tm;
   struct timespec end_tm;
@@ -74,15 +85,14 @@ int service_node_keep_alive(service_node *node, void (*ctx_func_cb)(void *ctx))
   {
     if (pthread_cond_timedwait(&cond, &mtx, &end_tm) == ETIMEDOUT)
     {
-      if(fail_cnt ==SERVICE_NODE_PING_FAIL_CNT)
+      if (fail_cnt == SERVICE_NODE_PING_FAIL_CNT)
       {
         break;
       }
       // send message to client
-      write(node->fd,SERVICE_NODE_HANDSHARK_KEY,sizeof(char));
-      //recv message from server
-      read(node->fd,&c,sizeof(char));
-     
+      write(node->fd, SERVICE_NODE_HANDSHARK_KEY, sizeof(char));
+      // recv message from server
+      read(node->fd, &c, sizeof(char));
     }
     pthread_mutex_unlock(&mtx);
   }
