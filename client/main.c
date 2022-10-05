@@ -2,23 +2,28 @@
  * File            : main.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-04 00:15:05
- * LastModified    : 2022-10-04 01:40:53
+ * LastModified    : 2022-10-05 07:18:18
  * Vim             : ts=4, sw=4
  */
 
 #define FUSE_USE_VERSION 31
 
 #include <fuse.h>
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
-#include <errno.h>
 #include <string.h>
+#include <errno.h>
 
 static struct options {
     const char *filename;
     const char *contents;
+    const char *mountpoint;
     int show_help;
 } options;
+
+struct fuse_session *se;
 
 #define OPTION(t, p) { t, offsetof(struct options, p), 1 }
 static const struct fuse_opt option_spec[] = {
@@ -110,16 +115,44 @@ static struct fuse_operations kirin_oper = {
 };
 
 int main(int argc, char *argv[]){
-    printf("hello kirinfs\n");
-    int ret;
+    //int ret;
+    //struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+
+    //options.filename = strdup("hello");
+    //options.contents = strdup("hello kirinfs");
+
+    //if (fuse_opt_parse(&args, &options, option_spec, NULL) == -1)
+    //    return -1;
+
+    //ret = fuse_main(args.argc, args.argv, &kirin_oper, NULL);
+    //return ret;
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    int ret = -1;
 
-    options.filename = strdup("hello");
-    options.contents = strdup("hello kirinfs");
+    options.mountpoint = strdup("/tmp/kirinfs_XXXXXX");
+    if(mkdtemp(options.mountpoint) == NULL) {
+        perror("mkdtemp");
+        return 1;
+    }
 
-    if (fuse_opt_parse(&args, &options, option_spec, NULL) == -1)
-        return -1;
+    se = fuse_session_new(&args, &kirin_oper, sizeof(kirin_oper), NULL);
 
-    ret = fuse_main(args.argc, args.argv, &kirin_oper, NULL);
-    return ret;
+    if (fuse_session_mount(se, options.mountpoint) != 0)
+    {
+        printf("fuse session mount\n");
+        goto err_out1;
+    }
+
+    //ret = fuse_session_loop(se);
+
+    //if (se == NULL)
+    //    goto err_out1;
+
+    //ret = kirin_mount(options.mountpoint);
+err_out1:
+    //rmdir(options.mountpoint);
+    //free(options.mountpoint);
+    //fuse_opt_free_args(&args);
+
+    return ret ? 1 : 0;
 }
