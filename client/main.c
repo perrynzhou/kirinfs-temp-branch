@@ -2,14 +2,14 @@
  * File            : main.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-04 00:15:05
- * LastModified    : 2022-10-05 07:18:18
+ * LastModified    : 2022-10-05 23:55:51
  * Vim             : ts=4, sw=4
  */
 
 #define FUSE_USE_VERSION 31
 
 #include <fuse.h>
-
+#include <fuse_lowlevel.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -19,7 +19,7 @@
 static struct options {
     const char *filename;
     const char *contents;
-    const char *mountpoint;
+    char *mountpoint;
     int show_help;
 } options;
 
@@ -34,7 +34,7 @@ static const struct fuse_opt option_spec[] = {
     FUSE_OPT_END
 };
 
-static void *kirin_init(struct fuse_conn_info* conn,
+static void *do_init(struct fuse_conn_info* conn,
         struct fuse_config* cfg){
     (void) conn;
     cfg->kernel_cache = 1;
@@ -106,8 +106,8 @@ static int kirin_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	return 0;
 }
 
-static struct fuse_operations kirin_oper = {
-    .init = kirin_init,
+const static struct fuse_lowlevel_ops kirin_oper = {
+    .init = do_init,
     .getattr = kirin_getattr,
     .readdir = kirin_readdir,
     .open = kirin_open,
@@ -115,44 +115,39 @@ static struct fuse_operations kirin_oper = {
 };
 
 int main(int argc, char *argv[]){
-    //int ret;
-    //struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-
-    //options.filename = strdup("hello");
-    //options.contents = strdup("hello kirinfs");
-
-    //if (fuse_opt_parse(&args, &options, option_spec, NULL) == -1)
-    //    return -1;
-
-    //ret = fuse_main(args.argc, args.argv, &kirin_oper, NULL);
-    //return ret;
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
-    int ret = -1;
 
     options.mountpoint = strdup("/tmp/kirinfs_XXXXXX");
     if(mkdtemp(options.mountpoint) == NULL) {
         perror("mkdtemp");
-        return 1;
+        return -1;
     }
 
+    fuse_lowlevel_version();
+
     se = fuse_session_new(&args, &kirin_oper, sizeof(kirin_oper), NULL);
+    if (!se){
+        perror("fuse_session_new failed");
+        return EDOM;
+    }
+
+    if (fuse_set_signal_handlers(se) != 0)
+        goto err_out2;
 
     if (fuse_session_mount(se, options.mountpoint) != 0)
     {
-        printf("fuse session mount\n");
-        goto err_out1;
+        printf("fuse session mount failed\n");
+        return ENOSYS;
     }
 
-    //ret = fuse_session_loop(se);
+    fuse_session_loop(se);
 
-    //if (se == NULL)
-    //    goto err_out1;
-
-    //ret = kirin_mount(options.mountpoint);
+err_out2:
+    fuse_session_destroy(se);
 err_out1:
-    //rmdir(options.mountpoint);
-    //free(options.mountpoint);
-    //fuse_opt_free_args(&args);
+    rmdir(options.mountpoint);
+    free(options.mountpoint);
+    fuse_opt_free_args(&args);
 
-    return ret ? 1 : 0;
+    return 0;
 }
