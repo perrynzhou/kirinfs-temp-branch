@@ -2,7 +2,7 @@
  * File            : main.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-04 00:15:05
- * LastModified    : 2022-10-05 23:55:51
+ * LastModified    : 2022-10-06 19:14:58
  * Vim             : ts=4, sw=4
  */
 
@@ -15,6 +15,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 
 static struct options {
     const char *filename;
@@ -24,6 +25,8 @@ static struct options {
 } options;
 
 struct fuse_session *se;
+static const char* hello_str = "Hello world\n";
+static const char* hello_name = "hello";
 
 #define OPTION(t, p) { t, offsetof(struct options, p), 1 }
 static const struct fuse_opt option_spec[] = {
@@ -34,80 +37,124 @@ static const struct fuse_opt option_spec[] = {
     FUSE_OPT_END
 };
 
-static void *do_init(struct fuse_conn_info* conn,
-        struct fuse_config* cfg){
-    (void) conn;
-    cfg->kernel_cache = 1;
-    return NULL;
-}
+struct dirbuf{
+    char *p;
+    size_t size;
+};
 
-static int kirin_open(const char* path, struct fuse_file_info *fi){
-    if(strcmp(path + 1, options.filename) != 0)
-        return -ENOENT;
-
-    if((fi->flags & O_ACCMODE) != O_RDONLY)
-        return -EACCES;
-
+static int kirin_stat(fuse_ino_t ino, struct stat* stbuf){
+    stbuf->st_ino = ino;
+    switch (ino) {
+        case 1:
+            stbuf->st_mode = S_IFDIR | 0755;
+            stbuf->st_nlink = 2;
+            break;
+        case 2:
+            stbuf->st_mode = S_IFREG | 0444;
+            stbuf->st_nlink = 1;
+            stbuf->st_size = strlen(hello_str);
+            break;
+        default:
+            return -1;
+    }
     return 0;
 }
 
-static int kirin_read(const char* path, char* buf, size_t size, off_t offset,
-        struct fuse_file_info *fi)
-{
-    size_t len;
-    (void) fi;
-    if(strcmp(path + 1, options.filename) != 0)
-        return -ENOENT;
+static void kirin_lookup(fuse_req_t req, fuse_ino_t parent,
+        const char *name) {
+    struct fuse_entry_param e;
 
-    len = strlen(options.contents);
-    if(offset < len) {
-        if(offset + size < len)
-            size = len -offset;
-        memcpy(buf, options.contents + offset, size);
-    }else
-        size = 0;
-    return size;
+    if (parent != 1 || strcmp(name, hello_name) != 0)
+        fuse_reply_err(req, ENOENT);
+    else{
+        memset(&e, 0, sizeof(e));
+        e.ino = 2;
+        e.attr_timeout = 1.0;
+        e.entry_timeout = 1.0;
+        kirin_stat(e.ino, &e.attr);
+
+        fuse_reply_entry(req, &e);
+    }
 }
 
-static int kirin_getattr(const char *path, struct stat *stbuf,
-        struct fuse_file_info *fi){
+static void kirin_getattr(fuse_req_t req, fuse_ino_t ino,
+        struct fuse_file_info *fi) {
+
+    struct stat stbuf;
     (void) fi;
-    int res = 0;
 
-    memset(stbuf, 0, sizeof(struct stat));
-    if(strcmp(path, "/") == 0){
-        stbuf->st_mode = S_IFDIR | 0755;
-        stbuf->st_nlink = 2;
-    } else if(strcmp(path + 1, options.filename) == 0){
-        stbuf->st_mode = S_IFREG | 0444;
-        stbuf->st_nlink = 1;
-        stbuf->st_size = strlen(options.contents);
-    } else
-        res = -ENOENT;
-
-    return res;
+    memset(&stbuf, 0, sizeof(stbuf));
+    if (kirin_stat(ino, &stbuf) == -1)
+        fuse_reply_err(req, ENOENT);
+    else
+        fuse_reply_attr(req, &stbuf, 1.0);
 }
 
-static int kirin_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-			 off_t offset, struct fuse_file_info *fi,
-			 enum fuse_readdir_flags flags)
+static void dirbuf_add(fuse_req_t req, struct dirbuf *b, const char *name,
+               fuse_ino_t ino)
 {
-	(void) offset;
-	(void) fi;
-	(void) flags;
+    struct stat stbuf;
+    size_t oldsize = b->size;
+    b->size += fuse_add_direntry(req, NULL, 0, name, NULL, 0);
+    b->p = (char *) realloc(b->p, b->size);
+    memset(&stbuf, 0, sizeof(stbuf));
+    stbuf.st_ino = ino;
+    fuse_add_direntry(req, b->p + oldsize, b->size - oldsize, name, &stbuf,
+              b->size);
+}
 
-	if (strcmp(path, "/") != 0)
-		return -ENOENT;
+#define min(x, y) ((x) < (y) ? (x) : (y))
 
-	filler(buf, ".", NULL, 0, 0);
-	filler(buf, "..", NULL, 0, 0);
-	filler(buf, options.filename, NULL, 0, 0);
+static int reply_buf_limited(fuse_req_t req, const char *buf, size_t bufsize,
+                 off_t off, size_t maxsize)
+{
+    if (off < bufsize)
+        return fuse_reply_buf(req, buf + off,
+                      min(bufsize - off, maxsize));
+    else
+        return fuse_reply_buf(req, NULL, 0);
+}
 
-	return 0;
+static void kirin_readdir(fuse_req_t req, fuse_ino_t ino, size_t size,
+        off_t off, struct fuse_file_info *fi) {
+    (void) fi;
+
+    if(ino != 1)
+        fuse_reply_err(req, ENOTDIR);
+    else {
+        struct dirbuf b;
+
+        memset(&b, 0, sizeof(b));
+        dirbuf_add(req, &b, ".", 1);
+        dirbuf_add(req, &b, "..", 1);
+        dirbuf_add(req, &b, hello_name, 2);
+        reply_buf_limited(req, b.p, b.size, off, size);
+        free(b.p);
+    }
+}
+
+static void kirin_open(fuse_req_t req, fuse_ino_t ino,
+              struct fuse_file_info *fi)
+{
+    if (ino != 2)
+        fuse_reply_err(req, EISDIR);
+    else if ((fi->flags & O_ACCMODE) != O_RDONLY)
+        fuse_reply_err(req, EACCES);
+    else
+        fuse_reply_open(req, fi);
+}
+
+static void kirin_read(fuse_req_t req, fuse_ino_t ino, size_t size,
+              off_t off, struct fuse_file_info *fi)
+{
+    (void) fi;
+
+    assert(ino == 2);
+    reply_buf_limited(req, hello_str, strlen(hello_str), off, size);
 }
 
 const static struct fuse_lowlevel_ops kirin_oper = {
-    .init = do_init,
+    .lookup = kirin_lookup,
     .getattr = kirin_getattr,
     .readdir = kirin_readdir,
     .open = kirin_open,
@@ -115,7 +162,10 @@ const static struct fuse_lowlevel_ops kirin_oper = {
 };
 
 int main(int argc, char *argv[]){
+    printf("hello world\n");
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+    struct fuse_cmdline_opts opts;
+    int ret = -1;
 
     options.mountpoint = strdup("/tmp/kirinfs_XXXXXX");
     if(mkdtemp(options.mountpoint) == NULL) {
@@ -127,27 +177,32 @@ int main(int argc, char *argv[]){
 
     se = fuse_session_new(&args, &kirin_oper, sizeof(kirin_oper), NULL);
     if (!se){
-        perror("fuse_session_new failed");
-        return EDOM;
+        goto err_out1;
     }
 
     if (fuse_set_signal_handlers(se) != 0)
         goto err_out2;
 
     if (fuse_session_mount(se, options.mountpoint) != 0)
-    {
-        printf("fuse session mount failed\n");
-        return ENOSYS;
-    }
+        goto err_out3;
 
-    fuse_session_loop(se);
+    fuse_daemonize(opts.foreground);
 
+    if (opts.singlethread)
+        ret = fuse_session_loop(se);
+    else
+        ret = fuse_session_loop_mt(se, opts.clone_fd);
+
+    fuse_session_unmount(se);
+    printf("bye bye\n");
+
+err_out3:
+    fuse_remove_signal_handlers(se);
 err_out2:
     fuse_session_destroy(se);
 err_out1:
-    rmdir(options.mountpoint);
     free(options.mountpoint);
     fuse_opt_free_args(&args);
 
-    return 0;
+    return ret ? 1 : 0;
 }
