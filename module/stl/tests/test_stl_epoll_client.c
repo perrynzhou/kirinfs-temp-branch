@@ -2,7 +2,7 @@
  * File            : test_stl_epoll_client.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-08 18:44:34
- * LastModified    : 2022-10-08 19:24:36
+ * LastModified    : 2022-10-09 18:53:44
  * Vim             : ts=4, sw=4
  */
 
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "./test_stl_epoll.h"
 
-demo_request* demo_request_alloc(char* service_addr, char* str) {
+demo_request* demo_request_alloc(char* service_addr) {
 
     demo_request* request = NULL;
 
@@ -24,19 +24,26 @@ demo_request* demo_request_alloc(char* service_addr, char* str) {
 }
 
 static void demo_request_print(demo_request* req) {
-    printf("hello new client %s", (char *)&req->service_node_addr);
+    printf("hello new client %s", (char *)&req->num);
 }
 
 int main(int argc, char *argv[]){
     int fd = 0;
     int ret = -1;
+    int try = 0, max_try = 3;
     char service_addr[] = "127.0.0.1:8081";
     demo_request *req = demo_request_alloc(service_addr);
 
     if (req) {
-        fd = stl_socket_init_client("127.0.0.1", "8082");
-        ret = write(fd, req, size(*req) + str(service_addr) + 1);
-        demo_request_print(req);
+        fd = stl_socket_init_client("127.0.0.1", "8081");
+        while(try < max_try) {
+            ret = write(fd, req, sizeof(*req) + strlen(service_addr) + 1);
+            if (ret > 0) {
+                demo_request_print(req);
+                break;
+            }
+            try ++;
+        }
     }
 
     return 0;
