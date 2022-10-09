@@ -2,13 +2,16 @@
  * File            : test_stl_epoll_client.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-08 18:44:34
- * LastModified    : 2022-10-09 18:53:44
+ * LastModified    : 2022-10-09 08:31:23
  * Vim             : ts=4, sw=4
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 #include "./test_stl_epoll.h"
+#include "../src/stl_socket.h"
 
 demo_request* demo_request_alloc(char* service_addr) {
 
@@ -38,6 +41,8 @@ int main(int argc, char *argv[]){
         fd = stl_socket_init_client("127.0.0.1", "8081");
         while(try < max_try) {
             ret = write(fd, req, sizeof(*req) + strlen(service_addr) + 1);
+            printf("fd = %d\n", fd);
+            printf("ret = %d\n", ret);
             if (ret > 0) {
                 demo_request_print(req);
                 break;
