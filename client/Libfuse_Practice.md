@@ -43,7 +43,95 @@ $ rm -rf hello
 rm: cannot remove ‘hello’: Function not implemented
 ```
 
-# main.c编译
+## main.c编译
 ```shell
 $ gcc -Wall main.c -D_FILE_OFFSET_BITS=64 `pkg-config fuse3 --cflags --libs` -o main
+```
+
+## gdb单步调试
+```shell
+# 通过gcc的-g选项生成调试信息
+$ gcc -Wall -g main.c -D_FILE_OFFSET_BITS=64 `pkg-config fuse3 --cflags --libs` -o main
+# 启动
+$ gdb ./main
+# 设置断点
+$ b kirin_lookup
+$ b kirin_getattr
+$ b kirin_readdir
+$ b kirin_open
+$ b kirin_read
+# info break确认断点信息
+$ info break
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x0000000000400e75 in kirin_lookup at main.c:67
+2       breakpoint     keep y   0x0000000000400f4a in kirin_getattr at main.c:86
+3       breakpoint     keep y   0x0000000000401176 in kirin_readdir at main.c:122
+4       breakpoint     keep y   0x000000000040123a in kirin_open at main.c:139
+5       breakpoint     keep y   0x00000000004012a5 in kirin_read at main.c:152
+# ls 挂载点，显示栈帧
+# 1. getattr
+$ bt
+#0  kirin_getattr (req=0x603510, ino=1, fi=0x0) at main.c:86
+#1  0x00007ffff7bb4645 in do_getattr () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#4  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 2. readdir
+$ bt
+#0  kirin_readdir (req=0x603510, ino=1, size=4096, off=0, fi=0x7fffffffe290) at main.c:122
+#1  0x00007ffff7bb3e4a in do_readdir () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#4  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 3. lookup
+$ bt
+#0  kirin_lookup (req=0x603510, parent=1, name=0x7ffff7edc038 "hello") at main.c:70
+#1  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#3  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 4. readdir
+$  bt
+#0  kirin_readdir (req=0x603510, ino=1, size=4096, off=96, fi=0x7fffffffe290) at main.c:122
+#1  0x00007ffff7bb3e4a in do_readdir () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#4  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# cat 文件
+# 1. getattr
+$ bt
+#0  kirin_getattr (req=0x603510, ino=1, fi=0x0) at main.c:87
+#1  0x00007ffff7bb4645 in do_getattr () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#4  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 2. lookup
+#0  kirin_lookup (req=0x603510, parent=1, name=0x7ffff7edc038 "hello") at main.c:67
+#1  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#3  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 3. open
+#0  kirin_open (req=0x603510, ino=2, fi=0x7fffffffe290) at main.c:144
+#1  0x00007ffff7bb4bbc in do_open () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#4  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 4. getattr
+#0  kirin_getattr (req=0x603510, ino=2, fi=0x0) at main.c:86
+#1  0x00007ffff7bb4645 in do_getattr () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#4  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 5. read
+#0  kirin_read (req=0x603510, ino=2, size=4096, off=0, fi=0x7fffffffe290) at main.c:152
+#1  0x00007ffff7bb42b2 in do_read () from /lib64/libfuse3.so.3
+#2  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#4  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
+# 6. getattr
+#0  kirin_stat (ino=2, stbuf=0x7fffffffe1f0) at main.c:46
+#1  0x0000000000400f7c in kirin_getattr (req=0x603510, ino=2, fi=0x7fffffffe290) at main.c:87
+#2  0x00007ffff7bb4645 in do_getattr () from /lib64/libfuse3.so.3
+#3  0x00007ffff7bb64f6 in fuse_session_process_buf_int () from /lib64/libfuse3.so.3
+#4  0x00007ffff7bb158d in fuse_session_loop () from /lib64/libfuse3.so.3
+#5  0x00000000004013f4 in main (argc=1, argv=0x7fffffffe5e8) at main.c:192
 ```
