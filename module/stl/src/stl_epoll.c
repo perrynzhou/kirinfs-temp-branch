@@ -380,7 +380,7 @@ static void *mgr_thread(void *arg) {
         sleep(3);
         i = rand() %87;
         if(i%2==0) {
-         stl_epoll_incr_thread(sep); 
+         stl_epoll_incr_thread(sep);
 
         }else {
             stl_epoll_deincr_thread(sep);
@@ -395,19 +395,19 @@ static void *start_epoll(void *arg) {
       stl_epoll_run(sep);
       return NULL;
 }
-int main()
-{
-    char addr[64] = {"127.0.0.1:6000"};
-    stl_epoll ep;
-    pthread_t  id[2];
-    stl_epoll_init(&ep, (char *)&addr, 3, 1024, stl_epoll_io_cb);
-    stl_epoll_set_context(&ep, NULL);
-    pthread_create(&id[0],NULL,start_epoll,&ep);
-     pthread_create(&id[1],NULL,mgr_thread,&ep);
-    for(size_t i=0;i<2;i++)
-    {
-        pthread_join(id[0],NULL);
-    }
-    return 0;
-}
+//int main()
+//{
+//    char addr[64] = {"127.0.0.1:6000"};
+//    stl_epoll ep;
+//    pthread_t  id[2];
+//    stl_epoll_init(&ep, (char *)&addr, 3, 1024, stl_epoll_io_cb);
+//    stl_epoll_set_context(&ep, NULL);
+//    pthread_create(&id[0],NULL,start_epoll,&ep);
+//     pthread_create(&id[1],NULL,mgr_thread,&ep);
+//    for(size_t i=0;i<2;i++)
+//    {
+//        pthread_join(id[0],NULL);
+//    }
+//    return 0;
+//}
 #endif
