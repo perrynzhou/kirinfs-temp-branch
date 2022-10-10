@@ -2,7 +2,7 @@
  * File            : test_stl_epoll.h
  * Author          : ZhangLe
  * CreateTime      : 2022-10-08 18:49:27
- * LastModified    : 2022-10-09 18:47:03
+ * LastModified    : 2022-10-09 08:23:49
  * Vim             : ts=4, sw=4
  */
 
@@ -11,16 +11,9 @@
 
 #include "../src/stl_epoll.h"
 
-typedef struct demo_service{
-    char* str;
-    int num;
-    stl_epoll *ep;
-} demo_service;
-
 typedef struct demo_request{
     size_t len;
     int num;
 } demo_request;
 
 #endif    /* test_stl_epoll.h */
-
