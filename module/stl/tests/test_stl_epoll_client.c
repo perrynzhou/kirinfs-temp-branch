@@ -2,7 +2,7 @@
  * File            : test_stl_epoll_client.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-08 18:44:34
- * LastModified    : 2022-10-09 08:31:23
+ * LastModified    : 2022-10-10 12:00:19
  * Vim             : ts=4, sw=4
  */
 
@@ -27,7 +27,7 @@ demo_request* demo_request_alloc(char* service_addr) {
 }
 
 static void demo_request_print(demo_request* req) {
-    printf("hello new client %s", (char *)&req->num);
+    printf("hello new client %d\n", req->num);
 }
 
 int main(int argc, char *argv[]){

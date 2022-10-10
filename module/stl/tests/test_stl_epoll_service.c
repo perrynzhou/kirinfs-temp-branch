@@ -2,7 +2,7 @@
  * File            : test_stl_epoll_service.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-07 03:12:21
- * LastModified    : 2022-10-09 08:31:25
+ * LastModified    : 2022-10-10 12:00:16
  * Vim             : ts=4, sw=4
  */
 
@@ -23,18 +23,20 @@ typedef struct demo_service{
 } demo_service;
 
 int demo_handle_io(void* ctx, int fd) {
-    ssize_t rn = -1;
+    printf("demo handle io\n");
+    int len = -1;
+    int num = -1;
     char dbuf[4096] = {'\0'};
 
     do{
-        rn = read(fd, (char *)&dbuf, SERVICE_MAX_DBUF_SIZE);
-        int num = ((demo_request *)&dbuf)->num;
-        printf("num %d\n", num);
-        printf("fd %d\n", fd);
-    } while(rn > 0);
+        len = read(fd, (char *)&dbuf, SERVICE_MAX_DBUF_SIZE);
+        num = ((demo_request *)&dbuf)->num;
+        //printf("num = %d\n", num);
+    } while(len > 0);
 
-    if (rn > 0) {
-        printf("demo handle io\n");
+    if (len == 0) {
+        num = ((demo_request *)&dbuf)->num;
+        printf("len = 0, num = %d\n", num);
     }
 
     return 0;
@@ -51,6 +53,7 @@ int main() {
     demo->ep->io_func_ctx = demo;
 
     if (demo) {
+        printf("demo\n");
         stl_epoll_run(demo->ep);
     }
     return 0;
