@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -45,7 +46,7 @@ int stl_socket_init_client(const char *host, const char *port)
   int sock = -1;
   if (host && port)
   {
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    sock = socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
@@ -195,20 +196,20 @@ int stl_socket_blocking(int fd)
 #ifdef TEST
 #include <unistd.h>
 #include <stdlib.h>
-int main()
-{
-  int sfd = stl_socket_create_tcp("127.0.0.1", "9090", 1);
-  fprintf(stdout, "sfd=%d\n", sfd);
-  int sock;
-  struct sockaddr addr;
-  socklen_t addrlen = sizeof(addr);
-
-  while (1)
-  {
-    if ((sock = accept(sfd, (struct sockaddr *)&addr, &addrlen)) != -1)
-    {
-      fprintf(stdout, "sfd=%d,cfd=%d\n", sfd, sock);
-    }
-  }
-}
+//int main()
+//{
+//  int sfd = stl_socket_create_tcp("127.0.0.1", "9090", 1);
+//  fprintf(stdout, "sfd=%d\n", sfd);
+//  int sock;
+//  struct sockaddr addr;
+//  socklen_t addrlen = sizeof(addr);
+//
+//  while (1)
+//  {
+//    if ((sock = accept(sfd, (struct sockaddr *)&addr, &addrlen)) != -1)
+//    {
+//      fprintf(stdout, "sfd=%d,cfd=%d\n", sfd, sock);
+//    }
+//  }
+//}
 #endif
