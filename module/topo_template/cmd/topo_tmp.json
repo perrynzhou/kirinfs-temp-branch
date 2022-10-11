@@ -1,0 +1,54 @@
+{
+  "fs_name": "bigfs",
+  "node_role": 2,
+  "node_topo": {
+   "1": [
+    {
+     "uuid": "36212dae-3ef2-4a0d-8fc5-029969264e0a",
+     "type": "oss",
+     "ip": "10.211.77.0",
+     "port": 6335,
+     "status": "active"
+    },
+    {
+     "uuid": "95993260-b8be-4d7e-8126-fb18a837707c",
+     "type": "oss",
+     "ip": "10.211.77.1",
+     "port": 6335,
+     "status": "active"
+    }
+   ],
+   "2": [
+    {
+     "uuid": "56147607-b46b-4422-a90e-a5915751f42f",
+     "type": "mgmt",
+     "ip": "10.211.66.0",
+     "port": 6335,
+     "status": "active"
+    },
+    {
+     "uuid": "e9aabd07-c670-4161-be88-adb5ad395115",
+     "type": "mgmt",
+     "ip": "10.211.66.1",
+     "port": 6335,
+     "status": "active"
+    }
+   ],
+   "3": [
+    {
+     "uuid": "91299d29-dbb0-4d0a-a303-1bc0404d1ed7",
+     "type": "client",
+     "ip": "10.145.22.0",
+     "port": 6335,
+     "status": "active"
+    },
+    {
+     "uuid": "d342bcc7-22f7-4929-b533-1810e97b2cba",
+     "type": "client",
+     "ip": "10.145.22.1",
+     "port": 6335,
+     "status": "active"
+    }
+   ]
+  }
+ }
