@@ -9,7 +9,8 @@ all:
 	#gcc -DTEST -g -O0 ../src/stl_socket.h ../src/stl_socket.c  -o test_socket
 	#gcc -DTEST -g -O0 ../src/stl_slab_pool.h ../src/stl_slab_pool.c   test_stl_slab_pool.c  -o test_stl_slab_pool
 	#gcc -DTEST -g -O0 ../src/stl_sha1.h ../src/stl_sha1.c test_stl_sha1.c  -o test_sha1
-	gcc -DTEST -g -O0 -std=c99 ../src/stl_epoll.h ../src/stl_epoll.c ../src/stl_socket.h ../src/stl_socket.c test_stl_epoll_service.c -lpthread -o test_epoll
+	gcc -DTEST -g -O0 -std=c99 ../src/stl_epoll.h ../src/stl_epoll.c ../src/stl_socket.h ../src/stl_socket.c test_stl_epoll_service.c -lpthread -o test_epoll_server
+	gcc -DTEST -g -O0 -std=c99 ../src/stl_epoll.h ../src/stl_epoll.c ../src/stl_socket.h ../src/stl_socket.c test_stl_epoll_client.c -lpthread -o test_epoll_client
 
 
 clean:
@@ -19,4 +20,5 @@ clean:
 	#rm -rf test_stl_dict
 	#rm -rf stl_slab_pool
 	#rm -rf test_sha1
-	rm -rf test_epoll
+	rm -rf test_epoll_server
+	rm -rf test_epoll_client

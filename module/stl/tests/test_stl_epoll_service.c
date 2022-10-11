@@ -2,20 +2,36 @@
  * File            : test_stl_epoll_service.c
  * Author          : ZhangLe
  * CreateTime      : 2022-10-07 03:12:21
- * LastModified    : 2022-10-09 18:38:39
+ * LastModified    : 2022-10-10 07:13:55
  * Vim             : ts=4, sw=4
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "../src/stl_epoll.h"
 #include "../src/stl_thread.h"
 #include "./test_stl_epoll.h"
 
+#define SERVICE_MAX_DBUF_SIZE (4096)
+
+typedef struct demo_service{
+    char* str;
+    int num;
+    stl_epoll *ep;
+} demo_service;
 
 int demo_handle_io(void* ctx, int fd) {
-    printf("demo handle io\n");
+    int num;
+    char dbuf[4096] = {'\0'};
+
+    while (0 < read(fd, (char *)&dbuf, SERVICE_MAX_DBUF_SIZE)){
+        num = ((demo_request *)&dbuf)->num;
+        printf("receive num = %d\n", num);
+    }
+
+    return 0;
 }
 
 int main() {
@@ -28,6 +44,9 @@ int main() {
     demo->ep = ep;
     demo->ep->io_func_ctx = demo;
 
-    stl_epoll_run(demo->ep);
+    if (demo) {
+        printf("demo\n");
+        stl_epoll_run(demo->ep);
+    }
     return 0;
 }
