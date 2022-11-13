@@ -6,6 +6,8 @@
  ************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "mgmt_cmd.h"
 mgmt_request *mgmt_request_alloc(char *service_addr, mgmt_node_type  node_type,mgmt_cmd_type cmd_type)
 {

@@ -6,14 +6,18 @@
  ************************************************************************/
 
 #include "service_node.h"
-#include "stl_socket.h"
+#include "../../module/stl/src/stl_socket.h"
 #include "mgmt_cmd.h"
 #include <stdio.h>
+#include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #define SERVICE_NODE_HANDSHARK_KEY 's'
 #define SERVICE_NODE_PING_FAIL_CNT 3
 
@@ -47,20 +51,20 @@ int service_node_init(service_node *sn,stl_string *host,int port,int node_type)
   return 0;
 
 init_err:
-  str_string_destroy(sn->node_addr);
+  stl_string_destroy(sn->node_addr);
   return -1;
 }
 void service_node_deinit(service_node *sn)
 {
   if(sn)
   {
-     str_string_destroy(sn->node_addr);
-      str_string_destroy(sn->node_type_key);
+     stl_string_destroy(sn->node_addr);
+      stl_string_destroy(sn->node_type_key);
   }
 }
 service_node *service_node_alloc(stl_string *host, int port,int node_type)
 {
-  service_node *sn = (service_node *)alloc(1, sizeof(service_node));
+  service_node *sn = (service_node *)calloc(1, sizeof(service_node));
   assert(sn != NULL);
 
   if (service_node_init(sn, host, port,node_type) != 0)
@@ -124,7 +128,7 @@ void service_node_destroy(service_node *node)
     {
       close(node->fd);
     }
-    stl_string_deinit(&node->addr);
+    stl_string_deinit(node->node_addr);
     free(node);
     node = NULL;
   }

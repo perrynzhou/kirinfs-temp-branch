@@ -12,6 +12,7 @@
 #include "../../module/stl/src/stl_thread.h"
 #include "../../module/stl/src/stl_mutex.h"
 #include "../../module/stl/src/stl_epoll.h"
+#include "service_node.h"
 #include <jansson.h>
 
 typedef struct

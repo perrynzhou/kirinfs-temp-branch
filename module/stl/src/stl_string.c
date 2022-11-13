@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <stdarg.h>
 #include <assert.h>
-
+#include <string.h>
 #define STL_STRING_TEMP_BUFFER_SIZE (2048)
 #define STL_STRING_SPLIT_CNT (256)
 void stl_string_reset(stl_string *c)
@@ -58,11 +58,12 @@ int stl_string_split(stl_string *src, const char *delim, stl_string ***c_ptr, si
     }
     if (i > 0)
     {
+      **c_ptr = calloc(i,sizeof(stl_string **));
       *cnt = i;
 
       for (size_t j = 0; j < i; j++)
       {
-        **c_ptr = tmp[j];
+        *c_ptr[j] = tmp[j];
       }
     }
 

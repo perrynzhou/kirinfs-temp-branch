@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
 #include "mgmt_service.h"
 #include "../../module/stl/src/stl_socket.h"
 #include "../../module/stl/src/stl_string.h"
@@ -21,7 +22,7 @@ void mgmt_usage()
 
 int main(int argc, char *argv[])
 {
-  char *mgmt_run_port = NULL;
+  int mgmt_run_port=-1;
   char *fsname_temp = NULL;
   char *mgmt_data_temp = NULL;
   int option = 0;
@@ -44,7 +45,7 @@ int main(int argc, char *argv[])
   }
   // mgmt_service *mgmt_service_alloc(int port, stl_string *fsname, stl_string *dir)
 
-  if (mgmt_run_port == NULL || fsname_temp == NULL || mgmt_data_temp == NULL)
+  if (mgmt_run_port == -1 || fsname_temp == NULL || mgmt_data_temp == NULL)
   {
     mgmt_usage();
     exit(EXIT_FAILURE);
@@ -59,9 +60,8 @@ int main(int argc, char *argv[])
     stl_string_destroy(mgmt_data);
     return -1;
   }
-  int port = atoi(mgmt_run_port);
 
-  mgmt_service *service = mgmt_service_alloc(port, fsname, mgmt_data);
+  mgmt_service *service = mgmt_service_alloc(mgmt_run_port, fsname, mgmt_data);
   if (service)
   {
     mgmt_service_start(service);

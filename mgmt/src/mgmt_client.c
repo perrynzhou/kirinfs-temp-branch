@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
 #include "mgmt_cmd.h"
 #include "../../module/stl/src/stl_socket.h"
 #include "../../module/stl/src/stl_string.h"

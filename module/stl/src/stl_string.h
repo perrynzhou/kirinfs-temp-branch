@@ -28,7 +28,7 @@ stl_string *stl_string_empty(size_t size);
 int stl_string_dup(stl_string *src,stl_string *dst);
 void stl_string_trim(stl_string *src);
 int stl_string_replace(stl_string *src,const char *old_data,const char *new_data);
-int stl_string_split(stl_string *src,const char *delim,stl_string **c_ptr,size_t *cnt);
+int stl_string_split(stl_string *src,const char *delim,stl_string ***c_ptr,size_t *cnt);
 int stl_string_sprintf(stl_string *c, const char *fmt, ...);
 bool stl_string_hassuffix(stl_string *c, char *s);
 bool stl_string_hasprefix(stl_string *c, char *s);

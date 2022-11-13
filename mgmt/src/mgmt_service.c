@@ -6,11 +6,14 @@
  ************************************************************************/
 
 #include "mgmt_service.h"
-#include "stl_hash.h"
+#include "../../module/stl/src/stl_hash.h"
 #include "service_node.h"
 #include "mgmt_cmd.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #define SERVICE_MAX_NODE_COUNT (4096)
 #define SERVICE_MAX_DBUF_SIZE (4096)
 
@@ -150,9 +153,9 @@ int mgmt_service_expel_node(mgmt_service *service, service_node *node_info)
   if (service && node_info)
   {
     stl_dict_item key = {
-        .data.str = stl_string_data(&node_info->node_addr),
+        .data.str = stl_string_data(node_info->node_addr),
         .data_type = DICT_ITEM_TYPE_STR,
-        .len = strlen(stl_string_data(&node_info->node_addr)),
+        .len = strlen(stl_string_data(node_info->node_addr)),
     };
     void *ptr = NULL;
     if ((ptr = stl_dict_lookup(service->service_info, &key)))
