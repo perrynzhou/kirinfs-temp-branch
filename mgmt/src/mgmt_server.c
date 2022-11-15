@@ -16,13 +16,13 @@
 #include "../../module/stl/src/stl_string.h"
 void mgmt_usage()
 {
-  printf("Usage: mgmt -s {mgmt_addr} -f {fsname}\n");
+  printf("Usage: mgmt -p {mgmt_port}  -d {mgmt_data_path} -f {fsname}\n");
   printf("       mgmt -p 4567  -d /data  -f bigfs\n");
 }
 
 int main(int argc, char *argv[])
 {
-  int mgmt_run_port=-1;
+  int mgmt_run_port = -1;
   char *fsname_temp = NULL;
   char *mgmt_data_temp = NULL;
   int option = 0;
@@ -51,20 +51,18 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
   stl_string **ptr = NULL;
-  size_t cnt = 0;
   stl_string *fsname = stl_string_alloc(fsname_temp);
   stl_string *mgmt_data = stl_string_alloc(mgmt_data_temp);
-  if (cnt <= 0)
-  {
-    stl_string_destroy(fsname);
-    stl_string_destroy(mgmt_data);
-    return -1;
-  }
 
   mgmt_service *service = mgmt_service_alloc(mgmt_run_port, fsname, mgmt_data);
   if (service)
   {
+    free(fsname_temp);
+    free(mgmt_data_temp);
+    stl_string_destroy(fsname);
+    stl_string_destroy(mgmt_data);
     mgmt_service_start(service);
   }
+
   return 0;
 }

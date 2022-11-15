@@ -7,6 +7,8 @@
 
 #ifndef __STL_STRING_H
 #define __STL_STRING_H
+#define _GNU_SOURCE
+
 #include <stdbool.h>
 #include <stdio.h>
 #define STL_STRING_INLINE_LEN   (8)

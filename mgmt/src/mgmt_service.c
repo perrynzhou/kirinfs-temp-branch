@@ -100,6 +100,10 @@ mgmt_service *mgmt_service_alloc(int port, stl_string *fsname, stl_string *dir)
     mgmt->detach_works = (stl_thread **)calloc(SERVICE_MAX_NODE_COUNT, sizeof(stl_thread *));
     mgmt->num_detach_works = 0;
     mgmt->ep->io_func_ctx = mgmt;
+
+   stl_string_init(&mgmt->fsname,stl_string_data(fsname));
+   stl_string_init(&mgmt->dir,stl_string_data(dir));
+
   }
 out:
   return mgmt;
@@ -125,7 +129,7 @@ int mgmt_service_join_node(mgmt_service *service, service_node *node_info)
       {
         
         
-        service_node *node = service_node_create(node_info->node_addr,node_info->port,node_info->node_type_val);
+        service_node *node = service_node_alloc(node_info->node_addr,node_info->port,node_info->node_type_val);
         assert(node != NULL);
         stl_dict_item value = {
             .data.ptr = node,
