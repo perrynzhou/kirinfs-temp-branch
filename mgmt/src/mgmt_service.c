@@ -87,13 +87,14 @@ static int mgmt_service_modify_topo(mgmt_service *service)
 {
   return 0;
 }
-mgmt_service *mgmt_service_alloc(int port, stl_string *fsname, stl_string *dir)
+mgmt_service *mgmt_service_alloc(stl_string  *addr, stl_string *fsname, stl_string *dir)
 {
   mgmt_service *mgmt = NULL;
   stl_epoll *ep = NULL;
   if (fsname && dir)
   {
-    ep = stl_epoll_alloc("127.0.0.1", 1, 1024, (stl_epoll_io_func)&mgmt_handle_io);
+    char *addr_info = stl_string_data(addr);
+    ep = stl_epoll_alloc(addr_info, 1, 1024, (stl_epoll_io_func)&mgmt_handle_io);
     mgmt = calloc(1, sizeof(mgmt_service));
     mgmt->ep = ep;
     mgmt->service_info = stl_dict_alloc(SERVICE_MAX_NODE_COUNT, mgmt_service_node_cmp, stl_hash_crc32a);
