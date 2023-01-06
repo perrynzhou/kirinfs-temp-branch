@@ -351,6 +351,9 @@ int stl_epoll_run(stl_epoll *sep)
     free(events);
     return 0;
 }
+void stl_epoll_destroy(stl_epoll *sep) {
+    //todo
+}
 #ifdef TEST
 static int stl_epoll_io_cb(void *ctx, int fd)
 {

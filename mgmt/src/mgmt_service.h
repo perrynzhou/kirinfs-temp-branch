@@ -12,6 +12,7 @@
 #include "../../module/stl/src/stl_thread.h"
 #include "../../module/stl/src/stl_mutex.h"
 #include "../../module/stl/src/stl_epoll.h"
+#include "service_node.h"
 #include <jansson.h>
 
 typedef struct
@@ -39,7 +40,7 @@ typedef struct
    stl_epoll *ep;
 } mgmt_service;
 
-mgmt_service *mgmt_service_alloc(int port,stl_string *fsname, stl_string *dir);
+mgmt_service *mgmt_service_alloc(stl_string *addr,stl_string *fsname, stl_string *dir);
 int mgmt_service_join_node(mgmt_service *service,service_node *node_info);
 int mgmt_service_expel_node(mgmt_service *service,service_node *node_info);
 int mgmt_service_start(mgmt_service *service);

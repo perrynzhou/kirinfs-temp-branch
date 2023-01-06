@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
 #include "mgmt_cmd.h"
 #include "../../module/stl/src/stl_socket.h"
 #include "../../module/stl/src/stl_string.h"
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
             service_addr = strdup(optarg);
             break;
         case 't':
-            node_cmd_type_info = strup(optarg);
+            node_cmd_type_info = strdup(optarg);
             break;
         default:
             mgmt_client_usage();
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
     }
     if (service_addr == NULL || mgmt_addr == NULL || node_cmd_type_info == NULL)
     {
-        mgmt_usage();
+        mgmt_client_usage();
         exit(EXIT_FAILURE);
     }
 
